@@ -10,9 +10,9 @@ def load_env():
     try:
         return {
             "LOGGING_LEVEL": os.environ["LOGGING_LEVEL"],
-            "APP_ENV": os.environ['APP_ENV'],
-            "SQS" : os.environ['SQS'],
-            'DB': os.environ['DB']
+            "APP_ENV": os.environ["APP_ENV"],
+            "SQS": os.environ["SQS"],
+            "DB": os.environ["DB"],
         }
     except KeyError as error:
         LOGGER.exception("Enviroment variable %s is required.", error)
