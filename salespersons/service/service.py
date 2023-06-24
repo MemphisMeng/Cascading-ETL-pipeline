@@ -19,27 +19,30 @@ def main(event, environment):
             message_body = message["body"]
             body = ast.literal_eval(message_body)
             branch_id = str(body["branch_id"])
+            # go to a path that allows users to retrieve all information of the employees based on the input branch id
             response = requests.get(
-                url=f"www.domain.com/employees/salespersons/?branchID={branch_id}"
+                url=f"www.domain.com/employees?branchID={branch_id}"
             )
             response = response.json().get("result")
 
             if response:
                 for employee in response.get("employees"):
-                    if not ingestionCompleted(
-                        table,
-                        Key("employee_id").eq(str(employee["branch_id"])),
-                        employee,
-                        "employee_",
-                    ):
-                        # only update DynamoDB table when it's NOT complete ingesting
-                        update_info(table, employee)
-                    employee_id = str(employee["branch_id"])
-                    workload = {"branch_id": branch_id, "employee_id": employee_id}
-                    deliver_message(target_sqs, workload)
-                    LOGGER.info(
-                        f"Employee {employee_id} of branch {branch_id} is successfully sent to queue for the next stage!"
-                    )
+                    if employee['occupation'] == 'salesperson': # only looking for salespersons
+                        if not ingestionCompleted(
+                            table,
+                            Key("employee_id").eq(str(employee["employee_id"])),
+                            employee,
+                            "employee_",
+                        ):
+                            # only update DynamoDB table when it's NOT complete ingesting
+                            update_info(table, employee)
+                        employee_id = str(employee["branch_id"])
+                        workload = {"branch_id": branch_id, "employee_id": employee_id}
+                        deliver_message(target_sqs, workload)
+                        LOGGER.info(
+                            f"Employee {employee_id} of branch {branch_id} is successfully sent to queue for the next stage!"
+                        )
+            delete_message(source_sqs, message['ReceiptHandle'])
 
         except Exception as e:
             LOGGER.error(str(e), exc_info=True)
