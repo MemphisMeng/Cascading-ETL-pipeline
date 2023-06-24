@@ -1,4 +1,5 @@
 import boto3, logging
+from datetime import datetime
 LOGGER = logging.getLogger(__name__)
 
 def get_update_params(body):
@@ -47,6 +48,41 @@ def update_table(table_name, key, record):
     except Exception as e:
         LOGGER.info(e)
         return
+    
+def ingestionCompleted(table_name, condition, result, prefix):
+    dynamodb = boto3.resource('dynamodb')
+    table = dynamodb.Table(table_name)
+    retrieval = table.query(KeyConditionExpression=condition)['Items']
+
+    existing_items = 0
+    if len(retrieval) > 0:
+        for key in retrieval.keys():
+            if key.upper() not in reserved_words:
+                if result[key] == retrieval[0].get(key):
+                    existing_items += 1
+            elif result['key'] == retrieval[0].get(prefix + key):
+                existing_items += 1
+
+    completed = len(retrieval) and existing_items == len(result.items()) - 1
+    # len(retrieval) == 0: the item doesn't exist in DynamoDB at all
+    # existing_items == len(result.items()) - 1: the item exists and all its key-value pairs 
+    # are synced up with API
+    return completed
+
+def update_info(table_name, record, primary_key, prefix):
+    item_id = str(record[primary_key])
+    
+    to_insert_record = {}
+    for k, v in record.items():
+        if k != primary_key:
+            if k.upper() not in reserved_words:
+                to_insert_record[k] = v
+            else:
+                to_insert_record[prefix + k] = v
+
+    to_insert_record['last_modified'] = str(datetime.utcnow())
+    LOGGER.info(f'To update: {to_insert_record}')
+    update_table(table_name, {primary_key: item_id}, to_insert_record)
     
 
 reserved_words = ['ABORT',
