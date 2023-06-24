@@ -87,30 +87,26 @@ def update_info(table_name, record, primary_key, prefix):
     LOGGER.info(f"To update: {to_insert_record}")
     update_table(table_name, {primary_key: item_id}, to_insert_record)
 
-def publish_sqs(queue_url,message):
-    sqs = boto3.client('sqs')
+
+def deliver_message(queue_url, message):
+    sqs = boto3.client("sqs")
     sqs.send_message(
         QueueUrl=queue_url,
-        MessageBody=(
-            str(message)
-        ),
-        #DelaySeconds = delay_seconds               
+        MessageBody=(str(message)),
     )
 
-def delete_message(url,ReceiptHandle):
+
+def delete_message(url, ReceiptHandle):
     sqs = boto3.client("sqs")
-    sqs.delete_message(
-        QueueUrl=url,
-        ReceiptHandle=ReceiptHandle
-    )
+    sqs.delete_message(QueueUrl=url, ReceiptHandle=ReceiptHandle)
+
 
 def receive_message(url, maxNumberOfMessages=10):
     sqs = boto3.client("sqs")
     response = sqs.receive_message(
-        QueueUrl=url,
-        MaxNumberOfMessages=maxNumberOfMessages,
-        VisibilityTimeout=120    )
-    result = response.get("Messages",[])
+        QueueUrl=url, MaxNumberOfMessages=maxNumberOfMessages, VisibilityTimeout=120
+    )
+    result = response.get("Messages", [])
     return result
 
 

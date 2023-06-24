@@ -36,8 +36,10 @@ def main(event, environment):
                         update_info(table, employee)
                     employee_id = str(employee["branch_id"])
                     workload = {"branch_id": branch_id, "employee_id": employee_id}
-                    publish_sqs(target_sqs, workload)
-                    LOGGER.info(f"Employee {employee_id} of branch {branch_id} is successfully sent to queue for the next stage!")
+                    deliver_message(target_sqs, workload)
+                    LOGGER.info(
+                        f"Employee {employee_id} of branch {branch_id} is successfully sent to queue for the next stage!"
+                    )
 
         except Exception as e:
             LOGGER.error(str(e), exc_info=True)

@@ -52,7 +52,7 @@ def main(event, environment):
                     # only update DynamoDB table when it's NOT complete ingesting
                     update_info(table, result)
 
-            publish_sqs(queue, str({"branch": result["branch_id"]}))
+            deliver_message(queue, str({"branch": result["branch_id"]}))
             LOGGER.info(f"sending branch {result['branch_id']} for the next stage")
 
     except Exception as e:
