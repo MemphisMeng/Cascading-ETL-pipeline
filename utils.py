@@ -3,6 +3,10 @@ from datetime import datetime
 
 LOGGER = logging.getLogger(__name__)
 
+# boto3 setup
+session = boto3.session.Session()
+dynamodb = session.resource("dynamodb")
+sqs = session.client("sqs")
 
 def get_update_params(body):
     """Given a dictionary we generate an update expression and a dict of values
@@ -33,8 +37,6 @@ def update_table(table_name, key, record):
     * record: dict, the key-value pairs of other info to update; note that the partition key-value should NOT be included
     """
     try:
-        dynamodb = boto3.resource("dynamodb")
-
         a, v = get_update_params(record)
         table = dynamodb.Table(table_name)
         r = table.update_item(Key=key, UpdateExpression=a, ExpressionAttributeValues=v)
@@ -52,7 +54,6 @@ def update_table(table_name, key, record):
 
 
 def ingestionCompleted(table_name, condition, result, prefix):
-    dynamodb = boto3.resource("dynamodb")
     table = dynamodb.Table(table_name)
     retrieval = table.query(KeyConditionExpression=condition)["Items"]
 
@@ -89,7 +90,6 @@ def update_info(table_name, record, primary_key, prefix):
 
 
 def deliver_message(queue_url, message):
-    sqs = boto3.client("sqs")
     sqs.send_message(
         QueueUrl=queue_url,
         MessageBody=(str(message)),
@@ -97,12 +97,10 @@ def deliver_message(queue_url, message):
 
 
 def delete_message(url, ReceiptHandle):
-    sqs = boto3.client("sqs")
     sqs.delete_message(QueueUrl=url, ReceiptHandle=ReceiptHandle)
 
 
 def receive_message(url, maxNumberOfMessages=10):
-    sqs = boto3.client("sqs")
     response = sqs.receive_message(
         QueueUrl=url, MaxNumberOfMessages=maxNumberOfMessages, VisibilityTimeout=120
     )
