@@ -9,10 +9,10 @@ LOGGER = logging.getLogger(__name__)
 def main(event, environment):
     LOGGER.info(event)
 
-    source_sqs = environment["SOURCE_SQS"]
+    sqs = environment["SQS"]
     table = environment["DB"]
 
-    messages = receive_message(source_sqs)
+    messages = receive_message(sqs)
     for message in messages:
         try:
             message_body = message["Body"]
@@ -48,7 +48,7 @@ def main(event, environment):
                         LOGGER.info(
                             f"Successfully ingested the sale record {sale['id']} into our database!"
                         )
-            delete_message(source_sqs, message["ReceiptHandle"])
+            delete_message(sqs, message["ReceiptHandle"])
 
         except Exception as e:
             LOGGER.error(str(e), exc_info=True)
