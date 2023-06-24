@@ -10,7 +10,7 @@ LOGGER = logging.getLogger()
 # Replace the LambdaLoggerHandler formatter :
 LOGGER.handlers[0].setFormatter(jsonlogger.JsonFormatter())
 # Set default logging level
-LOGGING_LEVEL = getattr(logging, ENV["app"]["LOGGING_LEVEL"])
+LOGGING_LEVEL = getattr(logging, ENV["LOGGING_LEVEL"])
 LOGGER.setLevel(LOGGING_LEVEL)
 
 
