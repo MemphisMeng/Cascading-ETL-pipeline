@@ -27,7 +27,9 @@ def main(event, environment):
 
             if response:
                 for employee in response.get("employees"):
-                    if employee['occupation'] == 'salesperson': # only looking for salespersons
+                    if (
+                        employee["occupation"] == "salesperson"
+                    ):  # only looking for salespersons
                         if not ingestionCompleted(
                             table,
                             Key("employee_id").eq(str(employee["employee_id"])),
@@ -42,7 +44,7 @@ def main(event, environment):
                         LOGGER.info(
                             f"Employee {employee_id} of branch {branch_id} is successfully sent to queue for the next stage!"
                         )
-            delete_message(source_sqs, message['ReceiptHandle'])
+            delete_message(source_sqs, message["ReceiptHandle"])
 
         except Exception as e:
             LOGGER.error(str(e), exc_info=True)

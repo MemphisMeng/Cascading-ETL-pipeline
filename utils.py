@@ -8,6 +8,7 @@ session = boto3.session.Session()
 dynamodb = session.resource("dynamodb")
 sqs = session.client("sqs")
 
+
 def get_update_params(body):
     """Given a dictionary we generate an update expression and a dict of values
     to update a dynamodb table.
