@@ -6,6 +6,31 @@ LOGGER = logging.getLogger(__name__)
 
 
 def main(event, environment):
+    """
+    Process the invoking event data and perform operations related to employees based on the input branch ID.
+
+    Args:
+        event (dict): A JSON-formatted document that contains data for a Lambda function to process.
+        environment (dict): A context object that provides methods and properties about the invocation, function and runtime environment.
+
+    Returns:
+        None
+
+    Raises:
+        SystemExit: If an exception occurs during the execution.
+
+    Notes:
+        - The function retrieves messages from a source SQS queue and processes each message.
+        - Each message is expected to contain a 'body' field that is evaluated as a dictionary using `ast.literal_eval`.
+        - The function fetches employee information for a specified branch ID from a specified URL.
+        - Only employees with the occupation of 'salesperson' are considered for updating the DynamoDB table.
+        - The function checks if the employee record is already ingested into the table using the `ingestionCompleted` function.
+        - If the employee record is not already ingested, it is updated in the table.
+        - The function delivers a message containing the branch ID and employee ID to a target SQS queue for the next stage.
+        - The function logs the successful sending of employees to the target queue and deletes processed messages from the source queue.
+        - If an exception occurs during execution, the function logs the error and exits the program with a status code of 1.
+
+    """
     LOGGER.info(event)
 
     source_sqs = environment["SOURCE_SQS"]

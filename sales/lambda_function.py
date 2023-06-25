@@ -15,7 +15,16 @@ LOGGER.setLevel(LOGGING_LEVEL)
 
 
 def _lambda_context(context):
-    """Extract information relevant from context object."""
+    """
+    Extract information relevant from context object.
+
+    Args:
+        context: The context object provided by the Lambda runtime.
+
+    Returns:
+        dict: A dictionary containing relevant information from the context object.
+
+    """
     return {
         "function_name": context.function_name,
         "function_version": context.function_version,
@@ -24,6 +33,17 @@ def _lambda_context(context):
 
 # @datadog_lambda_wrapper
 def lambda_handler(event, context):
+    """
+    Handle the Lambda event.
+
+    Args:
+        event(dict): The event object containing input data for the Lambda function.
+        context(dict): The context object provided by the Lambda runtime.
+
+    Returns:
+        dict: A dictionary containing the response for the Lambda function.
+
+    """
     LOGGER.info("Starting lambda executing.", extra=_lambda_context(context))
     execution_summary = service.main(event, ENV)
     LOGGER.info("Successful lambda execution.", extra=_lambda_context(context))

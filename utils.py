@@ -9,38 +9,35 @@ dynamodb = session.resource("dynamodb")
 sqs = session.client("sqs")
 
 
-def get_update_params(body):
-    """Given a dictionary we generate an update expression and a dict of values
-    to update a dynamodb table.
-
-    Params:
-        body (dict): Parameters to use for formatting.
-
-    Returns:
-        update expression, dict of values.
-    """
-    update_expression = ["set "]
-    update_values = dict()
-
-    for key, val in body.items():
-        update_expression.append(f" {key} = :{key},")
-        update_values[f":{key}"] = val
-
-    return "".join(update_expression)[:-1], update_values
-
-
 def update_table(table_name, key, record):
     """
-    Update the dynamoDB table using the provided partition key(s) and values
-    - Params:
-    * table_name: string, the name of the table to update
-    * key: dict, the key part(s) stand for the columns and value part(s) for the row values to update on
-    * record: dict, the key-value pairs of other info to update; note that the partition key-value should NOT be included
+    Update the specified DynamoDB table with the provided record.
+
+    Args:
+        table_name (str): The name of the DynamoDB table to update.
+        key (dict): The key identifying the record to update.
+        record (dict): The updated values to set for the record.
+
+    Returns:
+        None
+
+    Notes:
+        - The function constructs an update expression and expression attribute values for each key-value pair in the record.
+        - It uses the provided table name and key to access the DynamoDB table.
+        - The function updates the item in the table using the constructed update expression and expression attribute values.
+        - The function logs the successful completion of the update operation, including the affected table and key.
+        - If an error occurs during the update operation, it is logged, and the function returns without raising an exception.
+
     """
     try:
-        a, v = get_update_params(record)
+        update_expression = ["set "]
+        update_values = dict()
+        for key, val in record.items():
+            update_expression.append(f" {key} = :{key},")
+            update_values[f":{key}"] = val
+
         table = dynamodb.Table(table_name)
-        r = table.update_item(Key=key, UpdateExpression=a, ExpressionAttributeValues=v)
+        r = table.update_item(Key=key, UpdateExpression="".join(update_expression)[:-1], ExpressionAttributeValues=update_values)
 
         table = table_name.split("-")[
             2
@@ -55,6 +52,26 @@ def update_table(table_name, key, record):
 
 
 def ingestionCompleted(table_name, condition, result, prefix):
+    """
+    Check if the ingestion of a record into the specified DynamoDB table is completed.
+
+    Args:
+        table_name (str): The name of the DynamoDB table to check.
+        condition (boto3.dynamodb.conditions.Key): The key condition expression for querying the table.
+        result (dict): The record to check for ingestion completion.
+        prefix (str): The prefix used for key matching.
+
+    Returns:
+        bool: True if the ingestion is completed, False otherwise.
+
+    Notes:
+        - The function queries the specified DynamoDB table using the provided condition.
+        - It retrieves the items matching the condition.
+        - The function compares the key-value pairs of the result with the retrieved items, accounting for the provided prefix if applicable.
+        - If all key-value pairs match between the result and the retrieved items, the ingestion is considered completed.
+        - The function returns True if the ingestion is completed, and False otherwise.
+
+    """
     table = dynamodb.Table(table_name)
     retrieval = table.query(KeyConditionExpression=condition)["Items"]
 
@@ -67,14 +84,35 @@ def ingestionCompleted(table_name, condition, result, prefix):
             elif result["key"] == retrieval[0].get(prefix + key):
                 existing_items += 1
 
-    completed = len(retrieval) and existing_items == len(result.items()) - 1
+    completed = len(retrieval) and existing_items == len(result.items())
     # len(retrieval) == 0: the item doesn't exist in DynamoDB at all
-    # existing_items == len(result.items()) - 1: the item exists and all its key-value pairs
+    # existing_items == len(result.items()): the item exists and all its key-value pairs
     # are synced up with API
     return completed
 
 
 def update_info(table_name, record, primary_key, prefix):
+    """
+    Update the specified DynamoDB table with the given record.
+
+    Args:
+        table_name (str): The name of the DynamoDB table to update.
+        record (dict): The record to update in the table.
+        primary_key (str): The primary key of the record.
+        prefix (str): The prefix used for key matching.
+
+    Returns:
+        None
+
+    Notes:
+        - The function constructs a new dictionary `to_insert_record` by iterating over the key-value pairs of the input `record`.
+        - The primary key is excluded from `to_insert_record`.
+        - If a key is not a reserved word, it is added to `to_insert_record` as is.
+        - If a key is a reserved word, it is added to `to_insert_record` with the specified prefix.
+        - The `last_modified` field is added to `to_insert_record` with the current UTC timestamp.
+        - The function logs the update operation and calls the `update_table` function to perform the update.
+
+    """
     item_id = str(record[primary_key])
 
     to_insert_record = {}
@@ -91,6 +129,21 @@ def update_info(table_name, record, primary_key, prefix):
 
 
 def deliver_message(queue_url, message):
+    """
+    Deliver a message to the specified queue URL.
+
+    Args:
+        queue_url (str): The URL of the queue to deliver the message to.
+        message (Any): The message to be delivered.
+
+    Returns:
+        None
+
+    Notes:
+        - The function uses the `sqs` object to send a message to the specified `queue_url`.
+        - The message body is converted to a string before delivery.
+
+    """
     sqs.send_message(
         QueueUrl=queue_url,
         MessageBody=(str(message)),
@@ -98,10 +151,39 @@ def deliver_message(queue_url, message):
 
 
 def delete_message(url, ReceiptHandle):
+    """
+    Delete a message from the specified queue.
+
+    Args:
+        url (str): The URL of the queue.
+        ReceiptHandle (str): The receipt handle of the message to delete.
+
+    Returns:
+        None
+
+    Notes:
+        - The function uses the `sqs` object to delete a message from the specified `url` using the provided `ReceiptHandle`.
+
+    """
     sqs.delete_message(QueueUrl=url, ReceiptHandle=ReceiptHandle)
 
 
 def receive_message(url, maxNumberOfMessages=10):
+    """
+    Receive messages from the specified queue URL.
+
+    Args:
+        url (str): The URL of the queue to receive messages from.
+        maxNumberOfMessages (int): The maximum number of messages to receive (default: 10).
+
+    Returns:
+        List[dict]: A list of received messages.
+
+    Notes:
+        - The function uses the `sqs` object to receive messages from the specified `url` with the provided `maxNumberOfMessages`.
+        - The received messages are extracted from the response and returned as a list.
+
+    """
     response = sqs.receive_message(
         QueueUrl=url, MaxNumberOfMessages=maxNumberOfMessages, VisibilityTimeout=120
     )
