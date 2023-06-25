@@ -1,0 +1,405 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: 'AWS::Serverless-2016-10-31'
+Parameters:  #   Type: String
+  Environment:
+    Type: String
+Resources:
+  # =========================================================================================
+  # IAM ROLES, POLICIES, PERMISSIONS
+  # =========================================================================================
+  LambdaRole:
+    Type: AWS::IAM::Role
+    Properties:
+      RoleName: !Sub '${AWS::StackName}-lambda-role'
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+        - Effect: Allow
+          Principal:
+            Service:
+            - lambda.amazonaws.com
+            - events.amazonaws.com
+          Action:
+          - sts:AssumeRole
+      ManagedPolicyArns:
+      - arn:aws:iam::aws:policy/AWSLambdaExecute
+      - arn:aws:iam::aws:policy/AmazonSQSFullAccess
+      - arn:aws:iam::aws:policy/AmazonDynamoDBFullAccess
+      Path: '/'
+  LambdaPolicy:
+    Type: AWS::IAM::Policy
+    Properties:
+      PolicyName: !Sub '${AWS::StackName}-lambda-policy'
+      PolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+        - Sid: EventBusAccess
+          Effect: Allow
+          Action:
+          - events:PutEvents
+          Resource: '*'
+        - Sid: LambdaInvokeAccess
+          Effect: Allow
+          Action:
+          - lambda:InvokeFunction
+          Resource: "*"
+        - Sid: LogAccess
+          Effect: Allow
+          Action:
+          - logs:CreateLogGroup
+          - logs:CreateLogStream
+          - logs:PutLogEvents
+          Resource: arn:aws:logs:*:*:*
+      Roles:
+      - !Ref LambdaRole
+  # =========================================================================================
+  # AWS LAMBDA FUNCTIONS
+  # ========================================================================================= 
+  BranchCollector:
+    Type: AWS::Serverless::Function
+    Properties:
+      FunctionName: !Sub branch-collector-${Environment}
+      Handler: lambda_function.lambda_handler
+      Runtime: python3.9
+      CodeUri: branches/
+      Description: updating branch info in our DynamoDB table
+      MemorySize: 128
+      Timeout: 900
+      Role: !GetAtt LambdaRole.Arn
+      Environment:
+        Variables:
+          LOGGING_LEVEL: INFO
+          APP_ENV: !Ref Environment
+          SQS: !Ref EmployeeQueue
+          DB: !Sub branches-${Environment}
+      DeadLetterQueue:
+        Type: SQS
+        TargetArn: 
+          Fn::GetAtt: BranchFunctionDeadLetterQueue.Arn
+      Events:
+        StartScheduledEvent:
+          Type: Schedule
+          Properties:
+            Schedule: rate(1 hour)
+
+  SalespersonCollector:
+    Type: AWS::Serverless::Function
+    Properties:
+      FunctionName: !Sub salesperson-collector-${Environment}
+      Handler: lambda_function.lambda_handler
+      Runtime: python3.9
+      CodeUri: salespersons/
+      Description: updating salesperson info in our DynamoDB table
+      MemorySize: 128
+      Timeout: 900
+      Role: !GetAtt LambdaRole.Arn
+      ReservedConcurrentExecutions: 5
+      Environment:
+        Variables:
+          LOGGING_LEVEL: INFO
+          APP_ENV: !Ref Environment
+          SOURCE_SQS: !Ref EmployeeQueue
+          TARGET_SQS: !Ref SaleQueue
+          DB: !Sub salespersons-${Environment}
+      DeadLetterQueue:
+        Type: SQS
+        TargetArn: 
+          Fn::GetAtt: EmployeeFunctionDeadLetterQueue.Arn
+      Events:
+        StartScheduledEvent:
+          Type: Schedule
+          Properties:
+            # every minute
+            Schedule: rate(1 minute)
+ 
+  SalesCollector:
+    Type: AWS::Serverless::Function
+    Properties:
+      FunctionName: !Sub sale-collector-${Environment}
+      Handler: lambda_function.lambda_handler
+      Runtime: python3.9
+      CodeUri: sales/
+      Description: updating sales info in our DynamoDB table
+      MemorySize: 128
+      Timeout: 900
+      ReservedConcurrentExecutions: 3
+      Role:
+        Fn::GetAtt:
+        - LambdaRole
+        - Arn
+      Environment:
+        Variables:
+          LOGGING_LEVEL: INFO
+          APP_ENV: !Ref Environment
+          SQS: !Ref SalesQueue
+          DB: !Sub sales-${Environment}
+      DeadLetterQueue:
+        Type: SQS
+        TargetArn: 
+          Fn::GetAtt: SaleFunctionDeadLetterQueue.Arn
+      Events:
+        StartScheduledEvent:
+          Type: Schedule
+          Properties:
+            # every minute
+            Schedule: rate(1 minute)
+
+  # =========================================================================================
+  # AWS DynamoDB TABLES
+  # ========================================================================================= 
+  BranchDynamoDBTable: 
+    Type: AWS::DynamoDB::Table
+    DeletionPolicy: Delete
+    Properties:
+      BillingMode: PAY_PER_REQUEST 
+      AttributeDefinitions: 
+        - 
+          AttributeName: "branch_id"
+          AttributeType: "S"
+      KeySchema: 
+        - 
+          AttributeName: "branch_id"
+          KeyType: "HASH"
+      StreamSpecification:
+        StreamViewType: NEW_IMAGE
+      TableName: !Sub branch-${Environment}
+  
+  SalespersonDynamoDBTable: 
+    Type: AWS::DynamoDB::Table
+    DeletionPolicy: Delete
+    Properties:
+      BillingMode: PAY_PER_REQUEST 
+      AttributeDefinitions: 
+        - 
+          AttributeName: "employee_id"
+          AttributeType: "S"
+        - 
+          AttributeName: "branch_id"
+          AttributeType: "S"
+      KeySchema: 
+        - 
+          AttributeName: "employee_id"
+          KeyType: "HASH"
+        - 
+          AttributeName: "branch_id"
+          KeyType: "RANGE"
+      StreamSpecification:
+        StreamViewType: NEW_IMAGE
+      TableName: !Sub salesperson-${Environment}
+
+  SaleDynamoDBTable:
+    Type: AWS::DynamoDB::Table
+    DeletionPolicy: Delete
+    Properties:
+      BillingMode: PAY_PER_REQUEST 
+      AttributeDefinitions: 
+        - 
+          AttributeName: "sale_id"
+          AttributeType: "S"
+        - 
+          AttributeName: "employee_id"
+          AttributeType: "S"
+      KeySchema: 
+        - 
+          AttributeName: "sale_id"
+          KeyType: "HASH"
+        - 
+          AttributeName: "employee_id"
+          KeyType: "RANGE"
+      StreamSpecification:
+        StreamViewType: NEW_IMAGE
+      TableName: !Sub sale-${Environment}
+
+  # =========================================================================================
+  # AWS SQS QUEUES
+  # ========================================================================================= 
+  EmployeeQueue:
+    Type: AWS::SQS::Queue
+    Properties:
+      QueueName: !Sub employee-queue-${Environment}
+      VisibilityTimeout: 900
+      RedrivePolicy:
+        deadLetterTargetArn: 
+          Fn::GetAtt: EmployeeWorkloadDeadLetterQueue.Arn
+        maxReceiveCount: 10
+
+  EmployeeWorkloadDeadLetterQueue: 
+    Type: AWS::SQS::Queue
+    Properties:
+      QueueName: !Sub employee-workload-dead-letter-queue-${Environment}
+      MessageRetentionPeriod: 1209600
+
+  BranchFunctionDeadLetterQueue: 
+    Type: AWS::SQS::Queue
+    Properties:
+      QueueName: !Sub branch-function-dead-letter-queue-${Environment}
+      MessageRetentionPeriod: 1209600
+
+  SaleQueue:
+    Type: AWS::SQS::Queue
+    Properties:
+      QueueName: !Sub sale-queue-${Environment}
+      VisibilityTimeout: 900
+      RedrivePolicy:
+        deadLetterTargetArn: 
+          Fn::GetAtt: SaleWorkloadDeadLetterQueue.Arn
+        maxReceiveCount: 10
+
+  SaleWorkloadDeadLetterQueue: 
+    Type: AWS::SQS::Queue
+    Properties:
+      QueueName: !Sub sale-workload-dead-letter-queue-${Environment}
+      MessageRetentionPeriod: 1209600
+      
+  EmployeeFunctionDeadLetterQueue: 
+    Type: AWS::SQS::Queue
+    Properties:
+      QueueName: !Sub employee-function-dead-letter-queue-${Environment}
+      MessageRetentionPeriod: 1209600
+
+  SaleFunctionDeadLetterQueue:
+    Type: AWS::SQS::Queue
+    Properties:
+      QueueName: !Sub sale-function-dead-letter-queue-${Environment}
+      MessageRetentionPeriod: 1209600
+
+  # =========================================================================================
+  # AWS CLOUDWATCH ALARMS
+  # =========================================================================================
+  BranchErrorAlarm:
+    Type: AWS::CloudWatch::Alarm
+    Properties:
+      ComparisonOperator: GreaterThanOrEqualToThreshold
+      Dimensions:
+        - Name: FunctionName
+          Value: !Ref BranchCollector
+      EvaluationPeriods: 1
+      MetricName: Errors
+      Namespace: AWS/Lambda
+      Period: 300
+      Statistic: Sum
+      Threshold: '1'
+      AlarmActions: 
+        - arn:aws:sns:us-east-1:{id}:{alarm-name}
+  BranchDurationAlarm:
+    Type: AWS::CloudWatch::Alarm
+    Properties:
+      ComparisonOperator: GreaterThanOrEqualToThreshold
+      Dimensions:
+        - Name: FunctionName
+          Value: !Ref BranchCollector
+      EvaluationPeriods: 1
+      MetricName: Duration
+      Namespace: AWS/Lambda
+      Period: 60
+      Statistic: Maximum
+      Threshold: '750000'
+      AlarmActions:
+        - arn:aws:sns:us-east-1:{id}:{alarm-name}
+  BranchThrottleAlarm:
+    Type: AWS::CloudWatch::Alarm
+    Properties:
+      ComparisonOperator: GreaterThanOrEqualToThreshold
+      Dimensions:
+        - Name: FunctionName
+          Value: !Ref BranchCollector
+      EvaluationPeriods: 1
+      MetricName: Throttles
+      Namespace: AWS/Lambda
+      Period: 300
+      Statistic: Sum
+      Threshold: '1'
+      AlarmActions:
+        - arn:aws:sns:us-east-1:{id}:{alarm-name}
+
+  SalespersonErrorAlarm:
+    Type: AWS::CloudWatch::Alarm
+    Properties:
+      ComparisonOperator: GreaterThanOrEqualToThreshold
+      Dimensions:
+        - Name: FunctionName
+          Value: !Ref SalespersonCollector
+      EvaluationPeriods: 1
+      MetricName: Errors
+      Namespace: AWS/Lambda
+      Period: 300
+      Statistic: Sum
+      Threshold: '1'
+      AlarmActions: 
+        - arn:aws:sns:us-east-1:{id}:{alarm-name}
+  SalespersonDurationAlarm:
+    Type: AWS::CloudWatch::Alarm
+    Properties:
+      ComparisonOperator: GreaterThanOrEqualToThreshold
+      Dimensions:
+        - Name: FunctionName
+          Value: !Ref SalespersonCollector
+      EvaluationPeriods: 1
+      MetricName: Duration
+      Namespace: AWS/Lambda
+      Period: 60
+      Statistic: Maximum
+      Threshold: '750000'
+      AlarmActions:
+        - arn:aws:sns:us-east-1:{id}:{alarm-name}
+  SalespersonThrottleAlarm:
+    Type: AWS::CloudWatch::Alarm
+    Properties:
+      ComparisonOperator: GreaterThanOrEqualToThreshold
+      Dimensions:
+        - Name: FunctionName
+          Value: !Ref SalespersonCollector
+      EvaluationPeriods: 1
+      MetricName: Throttles
+      Namespace: AWS/Lambda
+      Period: 300
+      Statistic: Sum
+      Threshold: '1'
+      AlarmActions:
+        - arn:aws:sns:us-east-1:{id}:{alarm-name}
+
+  SaleErrorAlarm:
+    Type: AWS::CloudWatch::Alarm
+    Properties:
+      ComparisonOperator: GreaterThanOrEqualToThreshold
+      Dimensions:
+        - Name: FunctionName
+          Value: !Ref SaleCollector
+      EvaluationPeriods: 1
+      MetricName: Errors
+      Namespace: AWS/Lambda
+      Period: 300
+      Statistic: Sum
+      Threshold: '1'
+      AlarmActions: 
+        - arn:aws:sns:us-east-1:{id}:{alarm-name}
+  SaleDurationAlarm:
+    Type: AWS::CloudWatch::Alarm
+    Properties:
+      ComparisonOperator: GreaterThanOrEqualToThreshold
+      Dimensions:
+        - Name: FunctionName
+          Value: !Ref SaleCollector
+      EvaluationPeriods: 1
+      MetricName: Duration
+      Namespace: AWS/Lambda
+      Period: 60
+      Statistic: Maximum
+      Threshold: '750000'
+      AlarmActions:
+        - arn:aws:sns:us-east-1:{id}:{alarm-name}
+  SaleThrottleAlarm:
+    Type: AWS::CloudWatch::Alarm
+    Properties:
+      ComparisonOperator: GreaterThanOrEqualToThreshold
+      Dimensions:
+        - Name: FunctionName
+          Value: !Ref SaleCollector
+      EvaluationPeriods: 1
+      MetricName: Throttles
+      Namespace: AWS/Lambda
+      Period: 300
+      Statistic: Sum
+      Threshold: '1'
+      AlarmActions:
+        - arn:aws:sns:us-east-1:{id}:{alarm-name}
