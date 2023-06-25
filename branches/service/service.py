@@ -27,7 +27,7 @@ def main(event, environment):
     LOGGER.info(event)
 
     if not event.get("branches"):
-        # default to look up all branches
+        # default to look up all branches if the value is an empty list
         branches = [
             "Scranton",
             "Akron",
