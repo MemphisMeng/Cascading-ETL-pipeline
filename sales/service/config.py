@@ -22,7 +22,7 @@ def load_env():
             - DB: Specifies the DB environment variable.
         - If any of the required environment variables are missing, a KeyError is raised.
         - The function logs an exception message indicating the missing environment variable and exits the program with a status code of 1.
-    """   
+    """
     try:
         return {
             "LOGGING_LEVEL": os.environ["LOGGING_LEVEL"],

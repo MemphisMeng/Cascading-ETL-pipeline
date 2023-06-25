@@ -23,7 +23,7 @@ def main(event, environment):
         - The function retrieves branch-specific information from a URL and updates the DynamoDB table accordingly.
         - The updated information is then delivered to an SQS queue for further processing.
 
-    """    
+    """
     LOGGER.info(event)
 
     if not event.get("branches"):

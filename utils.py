@@ -32,17 +32,18 @@ def update_table(table_name, key, record):
     try:
         update_expression = ["set "]
         update_values = dict()
-        for key, val in record.items():
-            update_expression.append(f" {key} = :{key},")
-            update_values[f":{key}"] = val
+        for k, v in record.items():
+            update_expression.append(f" {k} = :{k},")
+            update_values[f":{k}"] = v
 
         table = dynamodb.Table(table_name)
-        r = table.update_item(Key=key, UpdateExpression="".join(update_expression)[:-1], ExpressionAttributeValues=update_values)
+        r = table.update_item(
+            Key=key,
+            UpdateExpression="".join(update_expression)[:-1],
+            ExpressionAttributeValues=update_values,
+        )
 
-        table = table_name.split("-")[
-            2
-        ]  # our table naming format is "pbr-{player/event}-universe-{dev/prod}"
-        info = f"""successfully completed the update operation of {table}: {ID} to table {table_name}"""
+        info = f"""successfully completed the update operation of item: {list(key.values())[0]} to table {table_name}"""
         LOGGER.info(info, extra=r)
         return
 
