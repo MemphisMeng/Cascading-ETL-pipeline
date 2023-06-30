@@ -47,9 +47,9 @@ def main(event, environment):
             response = requests.get(
                 url=f"www.dundermifflinpaper.com/sales/?salespersonsID={employee_id}"
             )
-            sales = response.json().get(
-                "result"
-            ).get('sales')  # all the sales records of this salesperson
+            sales = (
+                response.json().get("result").get("sales")
+            )  # all the sales records of this salesperson
             now = datetime.utcnow()  # the unix timestamp of the current time in UTC
             for sale in sales:
                 sale_timestamp = datetime.strptime(

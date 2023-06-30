@@ -52,7 +52,9 @@ def main(event, environment):
     try:
         for branch in branches:
             # go to a path that allows users to retrieve all information of the specified branch(es) based on input date range
-            response = requests.get(url=f"www.dundermifflinpaper.com/branches/?branch={branch}")
+            response = requests.get(
+                url=f"www.dundermifflinpaper.com/branches/?branch={branch}"
+            )
             response = response.json()
             branches = response.get("result")
             for result in branches:
