@@ -52,12 +52,12 @@ def main(event, environment):
     try:
         for branch in branches:
             # go to a path that allows users to retrieve all information of the specified branch(es) based on input date range
-            response = requests.get(url=f"www.domain.com/branches/?branch={branch}")
+            response = requests.get(url=f"www.dundermifflinpaper.com/branches/?branch={branch}")
             response = response.json()
             for result in response.get("result"):
-                if not ingestionCompleted(
+                if not upToDate(
                     table,
-                    Key("branch_id").eq(str(result["branch_id"])),
+                    Key("branch_id").eq(str(result["id"])),
                     result,
                     "branch_",
                 ):

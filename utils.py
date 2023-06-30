@@ -52,9 +52,9 @@ def update_table(table_name, key, record):
         return
 
 
-def ingestionCompleted(table_name, condition, result, prefix):
+def upToDate(table_name, condition, result, prefix):
     """
-    Check if the ingestion of a record into the specified DynamoDB table is completed.
+    Check if a record in a given specified DynamoDB table is up-to-date, which means that it's no different from the API retrieval.
 
     Args:
         table_name (str): The name of the DynamoDB table to check.
