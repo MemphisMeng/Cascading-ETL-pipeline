@@ -7,6 +7,12 @@ Tutorial of AWS-based ETL pipeline development
 ## Running this repo
 ### Prerequisite: [SAM CLI](https://docs.aws.amazon.com/serverless-application-model/latest/developerguide/install-sam-cli.html)
 
+- Environment setup
+In each folder, run
+```
+pip install -r requirements.txt
+```
+
 - Build:
 ```
 sam build
