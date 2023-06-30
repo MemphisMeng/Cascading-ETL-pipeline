@@ -54,7 +54,8 @@ def main(event, environment):
             # go to a path that allows users to retrieve all information of the specified branch(es) based on input date range
             response = requests.get(url=f"www.dundermifflinpaper.com/branches/?branch={branch}")
             response = response.json()
-            for result in response.get("result"):
+            branches = response.get("result")
+            for result in branches:
                 if not upToDate(
                     table,
                     Key("branch_id").eq(str(result["id"])),

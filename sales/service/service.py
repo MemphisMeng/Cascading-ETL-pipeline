@@ -49,7 +49,7 @@ def main(event, environment):
             )
             sales = response.json().get(
                 "result"
-            )  # all the sales records of this salesperson
+            ).get('sales')  # all the sales records of this salesperson
             now = datetime.utcnow()  # the unix timestamp of the current time in UTC
             for sale in sales:
                 sale_timestamp = datetime.strptime(
