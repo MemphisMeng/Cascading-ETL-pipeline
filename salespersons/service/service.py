@@ -46,18 +46,18 @@ def main(event, environment):
             branch_id = str(body["branch_id"])
             # go to a path that allows users to retrieve all information of the employees based on the input branch id
             response = requests.get(
-                url=f"www.domain.com/employees?branchID={branch_id}"
+                url=f"www.dundermifflinpaper.com/employees?branchID={branch_id}"
             )
             response = response.json().get("result")
-
+            employees = response.json().get("result").get("employees")
             if response:
-                for employee in response.get("employees"):
+                for employee in employees:
                     if (
                         employee["occupation"] == "salesperson"
                     ):  # only looking for salespersons
-                        if not ingestionCompleted(
+                        if not upToDate(
                             table,
-                            Key("employee_id").eq(str(employee["employee_id"])),
+                            Key("employee_id").eq(str(employee["id"])),
                             employee,
                             "employee_",
                         ):

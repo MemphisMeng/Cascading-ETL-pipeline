@@ -45,10 +45,10 @@ def main(event, environment):
             branch_id = str(body["branch_id"])
             # go to a path that allows users to retrieve all information of the sales given that the salesperson ID is provided
             response = requests.get(
-                url=f"www.domain.com/sales/?salespersonsID={employee_id}"
+                url=f"www.dundermifflinpaper.com/sales/?salespersonsID={employee_id}"
             )
-            sales = response.json().get(
-                "result"
+            sales = (
+                response.json().get("result").get("sales")
             )  # all the sales records of this salesperson
             now = datetime.utcnow()  # the unix timestamp of the current time in UTC
             for sale in sales:
@@ -58,7 +58,7 @@ def main(event, environment):
                 if (
                     now - timedelta(hours=24) <= sale_timestamp and sale_timestamp < now
                 ):  # only look for the transactions made within the last 24 hrs
-                    if not ingestionCompleted(
+                    if not upToDate(
                         table,
                         Key("sale_id").eq(str(sale["id"])),
                         sale,
