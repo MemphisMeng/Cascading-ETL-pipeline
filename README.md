@@ -13,9 +13,14 @@ In each folder, run
 pip install -r requirements.txt
 ```
 
+- Dependencies:
+```
+for d in */; do cp utils.py "$d"; done
+```
+
 - Build:
 ```
-sam build
+sam build -u
 ```
 - Deploy:
 ```
