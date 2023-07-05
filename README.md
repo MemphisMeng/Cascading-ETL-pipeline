@@ -22,11 +22,13 @@ for d in */; do cp utils.py "$d"; done
 ```
 sam build -u
 ```
+- Local Testing:
+```
+sam local invoke "BranchCollector" -e branch.json --env-vars env.json
+sam local invoke "SalespersonCollector" -e branch.json --env-vars env.json
+sam local invoke "SalesCollector" -e branch.json --env-vars env.json
+```
 - Deploy:
 ```
-sam deploy
-```
-- Local Invoke:
-```
-sam local invoke "BranchCollector" -e event.json --env-vars env.json
+sam deploy --parameter-overrides Environment=dev
 ```
