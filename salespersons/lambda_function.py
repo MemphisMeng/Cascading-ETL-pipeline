@@ -45,6 +45,6 @@ def lambda_handler(event, context):
 
     """
     LOGGER.info("Starting lambda executing.", extra=_lambda_context(context))
-    execution_summary = service.main(event, ENV)
+    service.main(event, ENV)
     LOGGER.info("Successful lambda execution.", extra=_lambda_context(context))
-    return {"statusCode": 200, "body": json.dumps(execution_summary)}
+    return {"statusCode": 200}
