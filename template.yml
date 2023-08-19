@@ -112,7 +112,7 @@ Resources:
             # every minute
             Schedule: rate(1 minute)
  
-  SalesCollector:
+  SaleCollector:
     Type: AWS::Serverless::Function
     Properties:
       FunctionName: !Sub sale-collector-${Environment}
@@ -131,7 +131,7 @@ Resources:
         Variables:
           LOGGING_LEVEL: INFO
           APP_ENV: !Ref Environment
-          SQS: !Ref SalesQueue
+          SQS: !Ref SaleQueue
           DB: !Sub sales-${Environment}
       DeadLetterQueue:
         Type: SQS
@@ -278,7 +278,7 @@ Resources:
       Namespace: AWS/Lambda
       Period: 300
       Statistic: Sum
-      Threshold: '1'
+      Threshold: 1
       AlarmActions: 
         - arn:aws:sns:us-east-1:{id}:{alarm-name}
   BranchDurationAlarm:
@@ -293,7 +293,7 @@ Resources:
       Namespace: AWS/Lambda
       Period: 60
       Statistic: Maximum
-      Threshold: '750000'
+      Threshold: 750000
       AlarmActions:
         - arn:aws:sns:us-east-1:{id}:{alarm-name}
   BranchThrottleAlarm:
@@ -308,7 +308,7 @@ Resources:
       Namespace: AWS/Lambda
       Period: 300
       Statistic: Sum
-      Threshold: '1'
+      Threshold: 1
       AlarmActions:
         - arn:aws:sns:us-east-1:{id}:{alarm-name}
 
@@ -324,7 +324,7 @@ Resources:
       Namespace: AWS/Lambda
       Period: 300
       Statistic: Sum
-      Threshold: '1'
+      Threshold: 1
       AlarmActions: 
         - arn:aws:sns:us-east-1:{id}:{alarm-name}
   SalespersonDurationAlarm:
@@ -339,7 +339,7 @@ Resources:
       Namespace: AWS/Lambda
       Period: 60
       Statistic: Maximum
-      Threshold: '750000'
+      Threshold: 750000
       AlarmActions:
         - arn:aws:sns:us-east-1:{id}:{alarm-name}
   SalespersonThrottleAlarm:
@@ -354,7 +354,7 @@ Resources:
       Namespace: AWS/Lambda
       Period: 300
       Statistic: Sum
-      Threshold: '1'
+      Threshold: 1
       AlarmActions:
         - arn:aws:sns:us-east-1:{id}:{alarm-name}
 
@@ -370,7 +370,7 @@ Resources:
       Namespace: AWS/Lambda
       Period: 300
       Statistic: Sum
-      Threshold: '1'
+      Threshold: 1
       AlarmActions: 
         - arn:aws:sns:us-east-1:{id}:{alarm-name}
   SaleDurationAlarm:
@@ -385,7 +385,7 @@ Resources:
       Namespace: AWS/Lambda
       Period: 60
       Statistic: Maximum
-      Threshold: '750000'
+      Threshold: 750000
       AlarmActions:
         - arn:aws:sns:us-east-1:{id}:{alarm-name}
   SaleThrottleAlarm:
@@ -400,6 +400,6 @@ Resources:
       Namespace: AWS/Lambda
       Period: 300
       Statistic: Sum
-      Threshold: '1'
+      Threshold: 1
       AlarmActions:
         - arn:aws:sns:us-east-1:{id}:{alarm-name}
