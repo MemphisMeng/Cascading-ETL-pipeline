@@ -50,11 +50,6 @@ Resources:
           - logs:CreateLogStream
           - logs:PutLogEvents
           Resource: arn:aws:logs:*:*:*
-        - Sid: S3Access
-          Effect: Allow
-          Action:
-          - s3:PutObject
-          Resource: arn:aws:s3:*:*:*
       Roles:
       - !Ref LambdaRole
   # =========================================================================================
