@@ -15,62 +15,62 @@ on:
       - 'README.md'
 
 jobs:
-  detect:
-    runs-on: ubuntu-latest
-    steps:
-    - uses: actions/checkout@v3
-      with:
-        fetch-depth: 2
-    - name: Get changed files in the directory
-      id: changed-files-specific
-      uses: tj-actions/changed-files@v34
-      # with:
-      #   files: |
-      #     pipelines/**
-    - name: Get the folder name
-      id: get-folder-name
-      # working-directory: pipelines
-      run: |
-        JSON="["
-        for file in ${{ steps.changed-files-specific.outputs.all_changed_files }}; do
-            dir="$(cut -d'/' -f2 <<<"$file")" # always get the secondary folder from the working directory
-            JSONline="\"$dir\","
-            # we don't need to iterate on the same directory over and over, so
-            # only include it when it wasn't included
-            if [[ "$JSON" != *"$JSONline"* ]]; then
-              JSON="$JSON$JSONline"
-            fi
-        done
-        # Updates all artifacts if template or utils fiel is updated 
-        if [[ "$JSON" == *"template.yml"*  || "$JSON" == *"utils.py"*  ]]; then
-          ALLDICTS="["
-          for dir in */; do
-            if [[ "$dir" != *"infra"*  && "$dir" != *"functions"*  ]]; then
-              JSONline="\"${dir%/}\","
-              ALLDICTS="$ALLDICTS$JSONline"
-            fi
-          done
-          JSON="$ALLDICTS"
-        fi
-        # Remove last "," and add the closing bracket
-        if [[ $JSON == *, ]]; then
-            JSON="${JSON%?}"
-        fi
-        JSON="$JSON]"
-        echo "folders=$( echo "$JSON" )" >> $GITHUB_OUTPUT
-        echo $JSON
-    outputs:
-      matrix: ${{ steps.get-folder-name.outputs.folders }}
+  # detect:
+  #   runs-on: ubuntu-latest
+  #   steps:
+  #   - uses: actions/checkout@v3
+  #     with:
+  #       fetch-depth: 2
+  #   - name: Get changed files in the directory
+  #     id: changed-files-specific
+  #     uses: tj-actions/changed-files@v34
+  #     # with:
+  #     #   files: |
+  #     #     pipelines/**
+  #   - name: Get the folder name
+  #     id: get-folder-name
+  #     # working-directory: pipelines
+  #     run: |
+  #       JSON="["
+  #       for file in ${{ steps.changed-files-specific.outputs.all_changed_files }}; do
+  #           dir="$(cut -d'/' -f2 <<<"$file")" # always get the secondary folder from the working directory
+  #           JSONline="\"$dir\","
+  #           # we don't need to iterate on the same directory over and over, so
+  #           # only include it when it wasn't included
+  #           if [[ "$JSON" != *"$JSONline"* ]]; then
+  #             JSON="$JSON$JSONline"
+  #           fi
+  #       done
+  #       # Updates all artifacts if template or utils fiel is updated 
+  #       if [[ "$JSON" == *"template.yml"*  || "$JSON" == *"utils.py"*  ]]; then
+  #         ALLDICTS="["
+  #         for dir in */; do
+  #           if [[ "$dir" != *"infra"*  && "$dir" != *"functions"*  ]]; then
+  #             JSONline="\"${dir%/}\","
+  #             ALLDICTS="$ALLDICTS$JSONline"
+  #           fi
+  #         done
+  #         JSON="$ALLDICTS"
+  #       fi
+  #       # Remove last "," and add the closing bracket
+  #       if [[ $JSON == *, ]]; then
+  #           JSON="${JSON%?}"
+  #       fi
+  #       JSON="$JSON]"
+  #       echo "folders=$( echo "$JSON" )" >> $GITHUB_OUTPUT
+  #       echo $JSON
+  #   outputs:
+  #     matrix: ${{ steps.get-folder-name.outputs.folders }}
   
   deploy:
-    if: ${{ needs.detect-changed-files.outputs.matrix != '[]' && needs.detect-changed-files.outputs.matrix != '' }} # only execute the job when there is any change
+    # if: ${{ needs.detect-changed-files.outputs.matrix != '[]' && needs.detect-changed-files.outputs.matrix != '' }} # only execute the job when there is any change
     container: 
       image: lambci/lambda:build-python3.8
     runs-on: ubuntu-latest
-    strategy:
-      fail-fast: false # will NOT cancel all in-progress and queued jobs in the matrix if any job in the matrix fails
-      matrix:
-        folder: ${{ fromJSON(needs.detect-changed-files.outputs.matrix) }}
+    # strategy:
+    #   fail-fast: false # will NOT cancel all in-progress and queued jobs in the matrix if any job in the matrix fails
+    #   matrix:
+    #     folder: ${{ fromJSON(needs.detect-changed-files.outputs.matrix) }}
     steps:
       - name: Set Environment
         id: setenv

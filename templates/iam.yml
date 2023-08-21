@@ -1,0 +1,58 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: 'AWS::Serverless-2016-10-31'
+Parameters:  #   Type: String
+  Environment:
+    Type: String
+Resources:
+  LambdaRole:
+    Type: AWS::IAM::Role
+    Properties:
+      RoleName: !Sub '${AWS::StackName}-${Environment}-lambda-role'
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+        - Effect: Allow
+          Principal:
+            Service:
+            - lambda.amazonaws.com
+            - events.amazonaws.com
+          Action:
+          - sts:AssumeRole
+      ManagedPolicyArns:
+      - arn:aws:iam::aws:policy/AWSLambdaExecute
+      - arn:aws:iam::aws:policy/AmazonSQSFullAccess
+      - arn:aws:iam::aws:policy/AmazonDynamoDBFullAccess
+      Path: '/'
+  LambdaPolicy:
+    Type: AWS::IAM::Policy
+    Properties:
+      PolicyName: !Sub '${AWS::StackName}-${Environment}-lambda-policy'
+      PolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+        - Sid: EventBusAccess
+          Effect: Allow
+          Action:
+          - events:PutEvents
+          Resource: '*'
+        - Sid: LambdaInvokeAccess
+          Effect: Allow
+          Action:
+          - lambda:InvokeFunction
+          Resource: "*"
+        - Sid: LogAccess
+          Effect: Allow
+          Action:
+          - logs:CreateLogGroup
+          - logs:CreateLogStream
+          - logs:PutLogEvents
+          Resource: arn:aws:logs:*:*:*
+      Roles:
+      - !Ref LambdaRole
+
+Outputs:
+  Role:
+    Description: The role to be used across the stacks
+    Value: !GetAtt LambdaRole.Arn
+    Export:
+      Name: Role

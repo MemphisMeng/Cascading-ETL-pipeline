@@ -1,0 +1,88 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: 'AWS::Serverless-2016-10-31'
+Parameters:  #   Type: String
+  Environment:
+    Type: String
+Resources:
+  SaleCollector:
+    Type: AWS::Serverless::Function
+    Properties:
+      FunctionName: !Sub sale-collector-${Environment}
+      Handler: lambda_function.lambda_handler
+      Runtime: python3.8
+      CodeUri: sales/
+      Description: updating sales info in our DynamoDB table
+      MemorySize: 128
+      Timeout: 900
+      # ReservedConcurrentExecutions: 10
+      Role: !ImportValue Role
+      Environment:
+        Variables:
+          LOGGING_LEVEL: INFO
+          APP_ENV: !Ref Environment
+          SQS: !ImportValue SaleQueue
+          DB: !Sub sales-${Environment}
+      DeadLetterQueue:
+        Type: SQS
+        TargetArn: 
+          Fn::GetAtt: SaleFunctionDeadLetterQueue.Arn
+      Events:
+        StartScheduledEvent:
+          Type: Schedule
+          Properties:
+            # every minute
+            Schedule: rate(1 minute)
+
+  # dead letter queue
+  SaleFunctionDeadLetterQueue:
+    Type: AWS::SQS::Queue
+    Properties:
+      QueueName: !Sub sale-function-dead-letter-queue-${Environment}
+      MessageRetentionPeriod: 1209600
+
+  # alarms
+  SaleErrorAlarm:
+    Type: AWS::CloudWatch::Alarm
+    Properties:
+      ComparisonOperator: GreaterThanOrEqualToThreshold
+      Dimensions:
+        - Name: FunctionName
+          Value: !Ref SaleCollector
+      EvaluationPeriods: 1
+      MetricName: Errors
+      Namespace: AWS/Lambda
+      Period: 300
+      Statistic: Sum
+      Threshold: 1
+      AlarmActions: 
+        - arn:aws:sns:us-east-1:{id}:{alarm-name}
+  SaleDurationAlarm:
+    Type: AWS::CloudWatch::Alarm
+    Properties:
+      ComparisonOperator: GreaterThanOrEqualToThreshold
+      Dimensions:
+        - Name: FunctionName
+          Value: !Ref SaleCollector
+      EvaluationPeriods: 1
+      MetricName: Duration
+      Namespace: AWS/Lambda
+      Period: 60
+      Statistic: Maximum
+      Threshold: 750000
+      AlarmActions:
+        - arn:aws:sns:us-east-1:{id}:{alarm-name}
+  SaleThrottleAlarm:
+    Type: AWS::CloudWatch::Alarm
+    Properties:
+      ComparisonOperator: GreaterThanOrEqualToThreshold
+      Dimensions:
+        - Name: FunctionName
+          Value: !Ref SaleCollector
+      EvaluationPeriods: 1
+      MetricName: Throttles
+      Namespace: AWS/Lambda
+      Period: 300
+      Statistic: Sum
+      Threshold: 1
+      AlarmActions:
+        - arn:aws:sns:us-east-1:{id}:{alarm-name}

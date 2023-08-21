@@ -1,0 +1,86 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: 'AWS::Serverless-2016-10-31'
+Parameters:  #   Type: String
+  Environment:
+    Type: String
+Resources:
+  BranchCollector:
+    Type: AWS::Serverless::Function
+    Properties:
+      FunctionName: !Sub branch-collector-${Environment}
+      Handler: lambda_function.lambda_handler
+      Runtime: python3.8
+      CodeUri: branches/
+      Description: updating branch info in our DynamoDB table
+      MemorySize: 128
+      Timeout: 900
+      Role: !ImportValue Role
+      Environment:
+        Variables:
+          LOGGING_LEVEL: INFO
+          APP_ENV: !Ref Environment
+          SQS: !ImportValue EmployeeQueue
+          DB: !Sub branches-${Environment}
+      DeadLetterQueue:
+        Type: SQS
+        TargetArn: 
+          Fn::GetAtt: BranchFunctionDeadLetterQueue.Arn
+      Events:
+        StartScheduledEvent:
+          Type: Schedule
+          Properties:
+            Schedule: rate(1 hour)
+
+  # dead letter queue
+  BranchFunctionDeadLetterQueue: 
+    Type: AWS::SQS::Queue
+    Properties:
+      QueueName: !Sub branch-function-dead-letter-queue-${Environment}
+      MessageRetentionPeriod: 1209600
+
+  # alarms
+  BranchErrorAlarm:
+    Type: AWS::CloudWatch::Alarm
+    Properties:
+      ComparisonOperator: GreaterThanOrEqualToThreshold
+      Dimensions:
+        - Name: FunctionName
+          Value: !Ref BranchCollector
+      EvaluationPeriods: 1
+      MetricName: Errors
+      Namespace: AWS/Lambda
+      Period: 300
+      Statistic: Sum
+      Threshold: 1
+      AlarmActions: 
+        - arn:aws:sns:us-east-1:{id}:{alarm-name}
+  BranchDurationAlarm:
+    Type: AWS::CloudWatch::Alarm
+    Properties:
+      ComparisonOperator: GreaterThanOrEqualToThreshold
+      Dimensions:
+        - Name: FunctionName
+          Value: !Ref BranchCollector
+      EvaluationPeriods: 1
+      MetricName: Duration
+      Namespace: AWS/Lambda
+      Period: 60
+      Statistic: Maximum
+      Threshold: 750000
+      AlarmActions:
+        - arn:aws:sns:us-east-1:{id}:{alarm-name}
+  BranchThrottleAlarm:
+    Type: AWS::CloudWatch::Alarm
+    Properties:
+      ComparisonOperator: GreaterThanOrEqualToThreshold
+      Dimensions:
+        - Name: FunctionName
+          Value: !Ref BranchCollector
+      EvaluationPeriods: 1
+      MetricName: Throttles
+      Namespace: AWS/Lambda
+      Period: 300
+      Statistic: Sum
+      Threshold: 1
+      AlarmActions:
+        - arn:aws:sns:us-east-1:{id}:{alarm-name}
