@@ -17,7 +17,7 @@ on:
 jobs:
   deploy-lambda:
     container: 
-      image: lambci/lambda:build-python3.9
+      image: lambci/lambda:build-python3.7
     runs-on: ubuntu-latest
     env:
       CLOUD_FORMATION_ROLE: arn:aws:iam::807324965916:role/cdk-hnb659fds-cfn-exec-role-807324965916-us-east-1
