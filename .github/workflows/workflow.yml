@@ -24,9 +24,9 @@ jobs:
     - name: Get changed files in pipelines
       id: changed-files-specific
       uses: tj-actions/changed-files@v34
-      with:
-        files: |
-          pipelines/**
+      # with:
+      #   files: |
+      #     pipelines/**
     - name: Get the folder name
       id: get-folder-name
       working-directory: pipelines
