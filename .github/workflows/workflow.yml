@@ -15,12 +15,12 @@ on:
       - 'README.md'
 
 jobs:
-  deploy-lambda:
+  deploy:
     container: 
       image: lambci/lambda:build-python3.8
     runs-on: ubuntu-latest
     env:
-      CLOUD_FORMATION_ROLE: arn:aws:iam::807324965916:role/cdk-hnb659fds-cfn-exec-role-807324965916-us-east-1
+      BUCKET_NAME: mother-blooding-bucket
     steps:
       - name: Set Environment
         id: setenv
@@ -51,9 +51,28 @@ jobs:
           role-duration-seconds: 900
       - name: Install sam cli
         run: 'pip3 install aws-sam-cli'
+      - name: Complete policies
+        run: |
+          aws iam attach-user-policy \
+          --policy-arn arn:aws:iam::aws:policy/AmazonDynamoDBFullAccess \
+          --policy-arn arn:aws:iam::aws:policy/CloudWatchEventsFullAccess \
+          --policy-arn arn:aws:iam::aws:policy/AWSLambda_FullAccess \
+          --policy-arn arn:aws:iam::aws:policy/IAMFullAccess \
+          --policy-arn arn:aws:iam::aws:policy/AWSCloudFormationFullAccess \
+          --policy-arn arn:aws:iam::aws:policy/AmazonSQSFullAccess \
+          --policy-arn arn:aws:iam::aws:policy/AmazonS3FullAccess \
+          --user-name Memphis
+      - name: Create S3 Bucket
+        run: |
+          if ! aws s3api head-bucket --bucket "${{env.BUCKET_NAME}}" 2>/dev/null; then
+            aws s3api create-bucket --bucket "${{env.BUCKET_NAME}}"
+          else
+            echo "Bucket ${{env.BUCKET_NAME}} already exists"
+          fi
+
       - name: Copy utils.py
         run: 'for d in */; do cp utils.py "$d"; done'
       - name: build
-        run: sam build && sam package --s3-bucket mother-blooding-bucket --s3-prefix "${{steps.setrepo.outputs.repo_name}}/${{steps.setbranch.outputs.branch_name}}/${{steps.setenv.outputs.env_name}}" --output-template-file cfn-packaged.yaml --region us-east-1 || { echo 'my_command failed' ; exit 1; }
+        run: sam build && sam package --s3-bucket ${{env.BUCKET_NAME}} --s3-prefix "${{steps.setrepo.outputs.repo_name}}/${{steps.setbranch.outputs.branch_name}}/${{steps.setenv.outputs.env_name}}" --output-template-file packaged.yaml --region us-east-1 || { echo 'my_command failed' ; exit 1; }
       - name: deploy
-        run: sam deploy --template-file cfn-packaged.yaml --s3-bucket mother-blooding-bucket --s3-prefix "${{steps.setrepo.outputs.repo_name}}/${{steps.setbranch.outputs.branch_name}}/${{steps.setenv.outputs.env_name}}" --stack-name "${{steps.setrepo.outputs.repo_name}}-${{steps.setenv.outputs.env_name}}-stack" --capabilities CAPABILITY_NAMED_IAM --region us-east-1 --no-fail-on-empty-changeset --parameter-overrides Environment=${{steps.setenv.outputs.env_name}} || { echo 'my_command failed' ; exit 1; }
+        run: sam deploy --template-file packaged.yaml --s3-bucket ${{env.BUCKET_NAME}} --s3-prefix "${{steps.setrepo.outputs.repo_name}}/${{steps.setbranch.outputs.branch_name}}/${{steps.setenv.outputs.env_name}}" --stack-name "${{steps.setrepo.outputs.repo_name}}-${{steps.setenv.outputs.env_name}}-stack" --capabilities CAPABILITY_NAMED_IAM CAPABILITY_AUTO_EXPAND --region us-east-1 --no-fail-on-empty-changeset --parameter-overrides Environment=${{steps.setenv.outputs.env_name}} || { echo 'my_command failed' ; exit 1; }
