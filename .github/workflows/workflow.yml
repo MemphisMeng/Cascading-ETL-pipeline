@@ -112,6 +112,15 @@ jobs:
           --policy-arn arn:aws:iam::aws:policy/AmazonSQSFullAccess \
           --policy-arn arn:aws:iam::aws:policy/AmazonS3FullAccess \
           --user-name Memphis
+      - name: Create S3 Bucket
+        run: |
+          BUCKET_NAME=mother-blooding-bucket
+          if ! aws s3api head-bucket --bucket "$BUCKET_NAME" 2>/dev/null; then
+            aws s3api create-bucket --bucket "$BUCKET_NAME"
+          else
+            echo "Bucket $BUCKET_NAME already exists"
+          fi
+
       - name: Copy utils.py
         run: 'for d in */; do cp utils.py "$d"; done'
       - name: build
