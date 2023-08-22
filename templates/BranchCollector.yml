@@ -10,7 +10,7 @@ Resources:
       FunctionName: !Sub branch-collector-${Environment}
       Handler: lambda_function.lambda_handler
       Runtime: python3.8
-      CodeUri: branches/
+      CodeUri: ./../branches/
       Description: updating branch info in our DynamoDB table
       MemorySize: 128
       Timeout: 900
