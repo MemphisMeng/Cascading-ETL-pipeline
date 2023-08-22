@@ -14,12 +14,16 @@ Resources:
       Description: updating branch info in our DynamoDB table
       MemorySize: 128
       Timeout: 900
-      Role: !ImportValue ${Environment}-Role
+      Role: 
+        - Fn::ImportValue: 
+          Fn::Sub: ${Environment}-Role
       Environment:
         Variables:
           LOGGING_LEVEL: INFO
           APP_ENV: !Ref Environment
-          SQS: !ImportValue ${Environment}-EmployeeQueue
+          SQS: 
+            - Fn::ImportValue:
+              Fn::Sub: ${Environment}-EmployeeQueue
           DB: !Sub branches-${Environment}
       DeadLetterQueue:
         Type: SQS
