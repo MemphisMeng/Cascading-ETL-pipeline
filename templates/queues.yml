@@ -41,9 +41,9 @@ Outputs:
     Description: The SQS queue that delivers the payloads from branch collector to salesperson collector
     Value: !Ref EmployeeQueue
     Export:
-      Name: ${Environment}EmployeeQueue
+      Name: ${Environment}-EmployeeQueue
   SaleQueue:
     Description: The SQS queue that delivers the payloads from salesperson collector to sale collector
     Value: !Ref SaleQueue
     Export:
-      Name: ${Environment}SaleQueue
+      Name: ${Environment}-SaleQueue

@@ -55,4 +55,4 @@ Outputs:
     Description: The role to be used across the stacks
     Value: !GetAtt LambdaRole.Arn
     Export:
-      Name: ${Environment}Role
+      Name: ${Environment}-Role

@@ -14,14 +14,14 @@ Resources:
       Description: updating salesperson info in our DynamoDB table
       MemorySize: 128
       Timeout: 900
-      Role: !ImportValue ${Environment}Role
+      Role: !ImportValue ${Environment}-Role
       # ReservedConcurrentExecutions: 10
       Environment:
         Variables:
           LOGGING_LEVEL: INFO
           APP_ENV: !Ref Environment
-          SOURCE_SQS: !ImportValue ${Environment}EmployeeQueue
-          TARGET_SQS: !ImportValue ${Environment}SaleQueue
+          SOURCE_SQS: !ImportValue ${Environment}-EmployeeQueue
+          TARGET_SQS: !ImportValue ${Environment}-SaleQueue
           DB: !Sub salespersons-${Environment}
       DeadLetterQueue:
         Type: SQS
