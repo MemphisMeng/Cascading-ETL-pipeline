@@ -8,32 +8,32 @@ Resources:
   # IAM ROLES, POLICIES, PERMISSIONS
   # =========================================================================================
   IAM:
-    Type: AWS::Serverless::Application
+    Type: AWS::CloudFormation::Stack
     Properties:
-      Location: ./templates/iam.yml
+      TemplateURL: ./templates/iam.yml
       Parameters: 
         Environment: !Ref Environment
   # =========================================================================================
   # AWS LAMBDA FUNCTIONS
   # ========================================================================================= 
   BranchCollector:
-    Type: AWS::Serverless::Application
+    Type: AWS::CloudFormation::Stack
     Properties:
-      Location: ./templates/BranchCollector.yml
+      TemplateURL: ./templates/BranchCollector.yml
       Parameters: 
         Environment: !Ref Environment
 
   SalespersonCollector:
-    Type: AWS::Serverless::Application
+    Type: AWS::CloudFormation::Stack
     Properties:
-      Location: ./templates/SalespersonCollector.yml
+      TemplateURL: ./templates/SalespersonCollector.yml
       Parameters: 
         Environment: !Ref Environment
  
   SaleCollector:
-    Type: AWS::Serverless::Application
+    Type: AWS::CloudFormation::Stack
     Properties:
-      Location: ./templates/SaleCollector.yml
+      TemplateURL: ./templates/SaleCollector.yml
       Parameters: 
         Environment: !Ref Environment
 
@@ -41,9 +41,9 @@ Resources:
   # AWS DynamoDB TABLES
   # ========================================================================================= 
   Tables:
-    Type: AWS::Serverless::Application
+    Type: AWS::CloudFormation::Stack
     Properties:
-      Location: ./templates/tables.yml
+      TemplateURL: ./templates/tables.yml
       Parameters: 
         Environment: !Ref Environment
 
@@ -51,8 +51,8 @@ Resources:
   # AWS SQS QUEUES
   # ========================================================================================= 
   Queues:
-    Type: AWS::Serverless::Application
+    Type: AWS::CloudFormation::Stack
     Properties:
-      Location: ./templates/queues.yml
+      TemplateURL: ./templates/queues.yml
       Parameters: 
         Environment: !Ref Environment
