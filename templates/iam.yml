@@ -7,7 +7,7 @@ Resources:
   LambdaRole:
     Type: AWS::IAM::Role
     Properties:
-      RoleName: !Sub '${AWS::StackName}-${Environment}-lambda-role'
+      RoleName: !Sub '${Environment}-lambda-role'
       AssumeRolePolicyDocument:
         Version: '2012-10-17'
         Statement:
