@@ -22,6 +22,9 @@ Resources:
       TemplateURL: ./templates/BranchCollector.yml
       Parameters: 
         Environment: !Ref Environment
+    DependsOn: 
+      - IAM
+      - Queues
 
   SalespersonCollector:
     Type: AWS::CloudFormation::Stack
@@ -29,6 +32,9 @@ Resources:
       TemplateURL: ./templates/SalespersonCollector.yml
       Parameters: 
         Environment: !Ref Environment
+    DependsOn: 
+      - IAM
+      - Queues
  
   SaleCollector:
     Type: AWS::CloudFormation::Stack
@@ -36,6 +42,9 @@ Resources:
       TemplateURL: ./templates/SaleCollector.yml
       Parameters: 
         Environment: !Ref Environment
+    DependsOn: 
+      - IAM
+      - Queues
 
   # =========================================================================================
   # AWS DynamoDB TABLES

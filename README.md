@@ -30,5 +30,5 @@ sam local invoke "SalesCollector" -e branch.json --env-vars env.json
 ```
 - Deploy:
 ```
-sam deploy --parameter-overrides Environment=dev --no-fail-on-empty-changeset --capabilities CAPABILITY_NAMED_IAM --stack-name test-ETL-stack --s3-bucket unique-bucket-name 
+sam deploy --parameter-overrides Environment=local --no-fail-on-empty-changeset --capabilities CAPABILITY_NAMED_IAM CAPABILITY_AUTO_EXPAND --stack-name test-ETL-stack --s3-bucket mother-blooding-bucket
 ```
