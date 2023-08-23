@@ -15,8 +15,9 @@ Resources:
       MemorySize: 128
       Timeout: 900
       # ReservedConcurrentExecutions: 10
-      Role: Fn::ImportValue
-              !Sub ${Environment}-Role
+      Role: 
+        Fn::ImportValue:
+          !Sub ${Environment}-Role
       Environment:
         Variables:
           LOGGING_LEVEL: INFO
