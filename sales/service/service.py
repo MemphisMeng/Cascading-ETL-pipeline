@@ -42,7 +42,7 @@ def main(event, environment):
             message_body = message["Body"]
             body = ast.literal_eval(message_body)
             employee_id = str(body["employee_id"])
-            branch_id = str(body["branch_id"])
+            branch_id = str(body["branch_id"]) + 'c'
             # go to a path that allows users to retrieve all information of the sales given that the salesperson ID is provided
             response = requests.get(
                 url=f"www.dundermifflinpaper.com/sales/?salespersonsID={employee_id}"
