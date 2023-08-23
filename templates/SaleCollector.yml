@@ -15,12 +15,15 @@ Resources:
       MemorySize: 128
       Timeout: 900
       # ReservedConcurrentExecutions: 10
-      Role: !ImportValue Role
+      Role: 
+        Fn::ImportValue:
+          !Sub ${Environment}-Role
       Environment:
         Variables:
           LOGGING_LEVEL: INFO
           APP_ENV: !Ref Environment
-          SQS: !ImportValue SaleQueue
+          SQS: Fn::ImportValue
+                !Sub ${Environment}-SaleQueue
           DB: !Sub sales-${Environment}
       DeadLetterQueue:
         Type: SQS
