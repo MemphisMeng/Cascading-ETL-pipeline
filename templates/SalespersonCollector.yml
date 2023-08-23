@@ -14,8 +14,9 @@ Resources:
       Description: updating salesperson info in our DynamoDB table
       MemorySize: 128
       Timeout: 900
-      Role: Fn::ImportValue
-              !Sub ${Environment}-Role
+      Role: 
+        Fn::ImportValue:
+          !Sub ${Environment}-Role
       # ReservedConcurrentExecutions: 10
       Environment:
         Variables:
