@@ -47,7 +47,6 @@ jobs:
           aws-access-key-id: ${{secrets.AWS_ACCESS_KEY_ID}}
           aws-secret-access-key: ${{secrets.AWS_SECRET_ACCESS_KEY}}
           aws-region: us-east-1
-          # role-to-assume: arn:aws:iam::807324965916:role/cdk-hnb659fds-deploy-role-807324965916-us-east-1
           role-duration-seconds: 900
       - name: Install sam cli
         run: 'pip3 install aws-sam-cli'
