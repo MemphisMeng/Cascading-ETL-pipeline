@@ -25,8 +25,8 @@ sam build -u
 - Local Testing:
 ```
 sam local invoke "BranchCollector" -e branch.json --env-vars env.json
-sam local invoke "SalespersonCollector" -e branch.json --env-vars env.json
-sam local invoke "SalesCollector" -e branch.json --env-vars env.json
+sam local invoke "SalespersonCollector" -e salesperson.json --env-vars env.json
+sam local invoke "SalesCollector" -e sale.json --env-vars env.json
 ```
 - Deploy:
 ```

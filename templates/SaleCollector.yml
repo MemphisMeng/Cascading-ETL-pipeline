@@ -22,8 +22,9 @@ Resources:
         Variables:
           LOGGING_LEVEL: INFO
           APP_ENV: !Ref Environment
-          SQS: Fn::ImportValue
-                !Sub ${Environment}-SaleQueue
+          SQS: 
+            Fn::ImportValue:
+              Fn::Sub: ${Environment}-SaleQueue
           DB: !Sub sales-${Environment}
       DeadLetterQueue:
         Type: SQS

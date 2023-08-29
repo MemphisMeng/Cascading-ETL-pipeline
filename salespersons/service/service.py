@@ -49,8 +49,9 @@ def main(event, environment):
                 url=f"www.dundermifflinpaper.com/employees?branchID={branch_id}"
             )
             response = response.json().get("result")
-            employees = response.json().get("result").get("employees")
+            
             if response:
+                employees = response.json().get("result").get("employees")
                 for employee in employees:
                     if (
                         employee["occupation"] == "salesperson"
