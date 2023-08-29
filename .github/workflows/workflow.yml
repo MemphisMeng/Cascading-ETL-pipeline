@@ -20,7 +20,7 @@ jobs:
       image: lambci/lambda:build-python3.8
     runs-on: ubuntu-latest
     env:
-      BUCKET_NAME: mother-blooding-bucket
+      BUCKET_NAME: 1130b879-830a-4acb-bdfb-888fb69ccd0e
     steps:
       - name: Set Environment
         id: setenv
