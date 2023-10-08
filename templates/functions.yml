@@ -13,9 +13,6 @@ Resources:
       TemplateURL: BranchCollector.yml
       Parameters: 
         Environment: !Ref Environment
-    # DependsOn: 
-    #   - IAM
-    #   - Queues
 
   SalespersonCollector:
     Type: AWS::CloudFormation::Stack
@@ -23,9 +20,6 @@ Resources:
       TemplateURL: SalespersonCollector.yml
       Parameters: 
         Environment: !Ref Environment
-    # DependsOn: 
-    #   - IAM
-    #   - Queues
  
   SaleCollector:
     Type: AWS::CloudFormation::Stack
@@ -33,6 +27,3 @@ Resources:
       TemplateURL: SaleCollector.yml
       Parameters: 
         Environment: !Ref Environment
-    # DependsOn: 
-    #   - IAM
-    #   - Queues
