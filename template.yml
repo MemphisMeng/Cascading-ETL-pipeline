@@ -16,30 +16,10 @@ Resources:
   # =========================================================================================
   # AWS LAMBDA FUNCTIONS
   # ========================================================================================= 
-  BranchCollector:
+  Functions:
     Type: AWS::CloudFormation::Stack
     Properties:
-      TemplateURL: ./templates/BranchCollector.yml
-      Parameters: 
-        Environment: !Ref Environment
-    DependsOn: 
-      - IAM
-      - Queues
-
-  SalespersonCollector:
-    Type: AWS::CloudFormation::Stack
-    Properties:
-      TemplateURL: ./templates/SalespersonCollector.yml
-      Parameters: 
-        Environment: !Ref Environment
-    DependsOn: 
-      - IAM
-      - Queues
- 
-  SaleCollector:
-    Type: AWS::CloudFormation::Stack
-    Properties:
-      TemplateURL: ./templates/SaleCollector.yml
+      TemplateURL: ./templates/functions.yml
       Parameters: 
         Environment: !Ref Environment
     DependsOn: 
