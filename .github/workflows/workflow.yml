@@ -54,11 +54,23 @@ jobs:
         run: |
           aws iam attach-user-policy \
           --policy-arn arn:aws:iam::aws:policy/AmazonDynamoDBFullAccess \
+          --user-name Memphis
+          aws iam attach-user-policy \
           --policy-arn arn:aws:iam::aws:policy/CloudWatchEventsFullAccess \
+          --user-name Memphis
+          aws iam attach-user-policy \
           --policy-arn arn:aws:iam::aws:policy/AWSLambda_FullAccess \
+          --user-name Memphis
+          aws iam attach-user-policy \
           --policy-arn arn:aws:iam::aws:policy/IAMFullAccess \
+          --user-name Memphis
+          aws iam attach-user-policy \
           --policy-arn arn:aws:iam::aws:policy/AWSCloudFormationFullAccess \
+          --user-name Memphis
+          aws iam attach-user-policy \
           --policy-arn arn:aws:iam::aws:policy/AmazonSQSFullAccess \
+          --user-name Memphis
+          aws iam attach-user-policy \
           --policy-arn arn:aws:iam::aws:policy/AmazonS3FullAccess \
           --user-name Memphis
       - name: Create S3 Bucket
