@@ -1,0 +1,38 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: 'AWS::Serverless-2016-10-31'
+Parameters:  #   Type: String
+  Environment:
+    Type: String
+Resources:
+  # =========================================================================================
+  # AWS LAMBDA FUNCTIONS
+  # ========================================================================================= 
+  BranchCollector:
+    Type: AWS::CloudFormation::Stack
+    Properties:
+      TemplateURL: ./templates/BranchCollector.yml
+      Parameters: 
+        Environment: !Ref Environment
+    DependsOn: 
+      - IAM
+      - Queues
+
+  SalespersonCollector:
+    Type: AWS::CloudFormation::Stack
+    Properties:
+      TemplateURL: ./templates/SalespersonCollector.yml
+      Parameters: 
+        Environment: !Ref Environment
+    DependsOn: 
+      - IAM
+      - Queues
+ 
+  SaleCollector:
+    Type: AWS::CloudFormation::Stack
+    Properties:
+      TemplateURL: ./templates/SaleCollector.yml
+      Parameters: 
+        Environment: !Ref Environment
+    DependsOn: 
+      - IAM
+      - Queues
